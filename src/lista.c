@@ -49,7 +49,7 @@ void insert_nodo(Lista_t* head, void* value, DataType type) {
  * @param lista
  * @return Node_t**
  */
-Node_t** convertListToArr(Lista_t* lista) {
+Node_t** __convertListToArr(Lista_t* lista) {
   int size = lista->size;
   Node_t** arr = (Node_t**)malloc(size * sizeof(Node_t*));
   Node_t* tmp = lista->head;
@@ -61,41 +61,94 @@ Node_t** convertListToArr(Lista_t* lista) {
 }
 
 /**
+ * @brief Converto il campo del nodo in stringa
+ *
+ * @param fieldValue
+ * @param fieldType
+ * @return char*
+ */
+char* convertFieldToString(Node_t* fieldValue, DataType fieldType) {
+  char* a = (char*)malloc(fieldValue->type != STRING
+                              ? sizeof(fieldValue->value) + 1
+                              : sizeof(char*) * strlen(fieldValue->value) + 1);
+  switch (fieldValue->type) {
+    case INT:
+      sprintf(a, "%d", *(int*)fieldValue->value);
+      break;
+    case DOUBLE:
+      sprintf(a, "%f", *(double*)fieldValue->value);
+      break;
+    case CHAR:
+      sprintf(a, "%c", *(char*)fieldValue->value);
+      break;
+    case STRING:
+      memcpy(a, fieldValue->value, strlen(fieldValue->value));
+      break;
+    default:
+      fprintf(stderr, "Error type not found\n");
+      return NULL;
+  }
+  return a;
+}
+
+/**
+ * @brief
+ *
+ * @param a
+ * @param b
+ * @return int
+ * a<b => -1
+ * a=b => 0
+ * a>b => 1
+ */
+int cmpNodes(const void* a, const void* b) {
+  Node_t* nodeA = *((Node_t**)a);
+  Node_t* nodeB = *((Node_t**)b);
+  printf("Funzione compare\n");
+  if (nodeA->type == INT && nodeB->type == INT) {
+    printf("Nodo intero\n");
+    return (*(int*)nodeA->value - *(int*)nodeB->value);
+  } else if ((nodeA->type == INT || nodeA->type == DOUBLE) &&
+             (nodeB->type == INT || nodeB->type == DOUBLE)) {
+    printf("Nodo double\n");
+    double dA =
+        nodeA->type == DOUBLE ? *(double*)nodeA->value : *(int*)nodeA->value;
+    double dB =
+        nodeB->type == DOUBLE ? *(double*)nodeB->value : *(int*)nodeB->value;
+    return dA < dB ? -1 : (dA > dB ? 1 : 0);
+  } else if (nodeA->type == STRING && nodeB->type == STRING) {
+    return strcmp((char*)nodeA->value, (char*)nodeB->value);
+  } else if ((nodeA->type == DOUBLE || nodeA->type == STRING) ||
+             (nodeB->type == DOUBLE || nodeB->type == STRING)) {
+    printf("Nodo double-string\n");
+    return (nodeA->type == DOUBLE && nodeB->type == STRING)
+               ? -1
+               : ((nodeA->type == STRING && nodeB->type == STRING) ? 0 : 1);
+  }
+}
+
+/**
  * @brief Ordina un'array
  *
  * @param arr
  * @param size
+ * @todo Charge the algorithm of sort
  */
-void sortArr(Node_t** arr, int size) {
-  for (size_t i = 0; i < size - 1; i++) {
-    for (size_t j = i + 1; j < size; j++) {
-      if (arr[i]->type == INT && arr[j]->type == INT) {
-        if (*(int*)arr[i]->value > *(int*)arr[j]->value) {
-          Node_t* tmp = arr[i];
-          arr[i] = arr[j];
-          arr[j] = tmp;
-        };
-      } else if (arr[i]->type == DOUBLE && arr[j]->type == DOUBLE) {
-        if (*(double*)arr[i]->value > *(double*)arr[j]->value) {
-          Node_t* tmp = arr[i];
-          arr[i] = arr[j];
-          arr[j] = tmp;
-        }
-      } else if (arr[i]->type == DOUBLE && arr[j]->type == INT) {
-        if (*(double*)arr[i]->value > *(int*)arr[j]->value) {
-          Node_t* tmp = arr[i];
-          arr[i] = arr[j];
-          arr[j] = tmp;
-        }
-      } else if (arr[i]->type == INT && arr[j]->type == DOUBLE) {
-        if (*(int*)arr[i]->value > *(double*)arr[j]->value) {
-          Node_t* tmp = arr[i];
-          arr[i] = arr[j];
-          arr[j] = tmp;
-        }
-      }
-    }
-  }
+void __sortArr(Node_t** arr, int size) {
+  qsort(arr, size, sizeof(Node_t*), cmpNodes);
+  // for (size_t i = 0; i < size - 1; i++) {
+  //   char* a = convertFieldToString(arr[i], arr[i]->type);
+  //   for (size_t j = i + 1; j < size; j++) {
+  //     char* b = convertFieldToString(arr[j], arr[j]->type);
+  //     if (strcmp(arr[i]->value, arr[j]->value) > 0) {
+  //       Node_t* tmp = arr[i];
+  //       arr[i] = arr[j];
+  //       arr[j] = tmp;
+  //     }
+  //     free(b);
+  //   }
+  //   free(a);
+  // }
 }
 
 /**
@@ -104,7 +157,7 @@ void sortArr(Node_t** arr, int size) {
  * @param lista
  * @param arr
  */
-void rebuildList(Lista_t* lista, Node_t** arr) {
+void __rebuildList(Lista_t* lista, Node_t** arr) {
   Node_t* newHead = arr[0];
   newHead->prev = NULL;
   newHead->next = arr[1];
@@ -126,30 +179,30 @@ void rebuildList(Lista_t* lista, Node_t** arr) {
  * @brief Sorts the list in lexicographic order using a custom comparison
  * function.
  *
- * @param head
+ * @param self
  */
-void sort_list(Lista_t* lista) {
-  Node_t** arr = convertListToArr(lista);
-  sortArr(arr, lista->size);
-  rebuildList(lista, arr);
+void sort_list(Lista_t* self) {
+  Node_t** arr = __convertListToArr(self);
+  __sortArr(arr, self->size);
+  __rebuildList(self, arr);
   free(arr);
 }
 
 /**
  * @brief
  *
- * @param head
+ * @param self
  * @param node
  * @return true
  * @return false
  */
-bool delete_node(Lista_t* head, Node_t* node) {
-  if (node == NULL || head->head == NULL) return false;
+bool delete_node(Lista_t* self, Node_t* node) {
+  if (node == NULL || self->head == NULL) return false;
 
-  if (node == head->head) {
-    head->head = node->next;
-  } else if (node == head->tail) {
-    head->tail = node->prev;
+  if (node == self->head) {
+    self->head = node->next;
+  } else if (node == self->tail) {
+    self->tail = node->prev;
     node->prev->next = node->next;
   } else {
     node->prev->next = node->next;
@@ -157,7 +210,7 @@ bool delete_node(Lista_t* head, Node_t* node) {
   }
   free(node->value);
   free(node);
-  head->size--;
+  self->size--;
   return true;
 }
 
@@ -194,11 +247,11 @@ Node_t* find_value(const Lista_t* self, const void* value, DataType type) {
 /**
  * @brief controlla se la lista è vuota oppure no
  *
- * @param head
+ * @param self
  * @return true
  * @return false
  */
-bool is_empty(const Lista_t* head) { return head->head == NULL; }
+bool is_empty(const Lista_t* self) { return self->head == NULL; }
 
 /**
  * @brief Aggiunge in coda
@@ -240,10 +293,23 @@ void pop(Lista_t* self) {
  *
  * @param self
  */
-void print_list(Lista_t* self) {
+void print_list(const Lista_t* self) {
   printf("[");
   for (Node_t* tmp = self->head; tmp != NULL; tmp = tmp->next) {
     print_nodo(tmp, " ");
+  }
+  printf("\b]\n");
+}
+
+/**
+ * @brief Print type element of list
+ *
+ * @param self
+ */
+void print_list_type(const Lista_t* self) {
+  printf("[");
+  for (Node_t* tmp = self->head; tmp != NULL; tmp = tmp->next) {
+    printf("%s ", to_string_dataType(tmp->type));
   }
   printf("\b]\n");
 }
@@ -253,7 +319,7 @@ void print_list(Lista_t* self) {
  *
  * @param self
  */
-void print_list_inverse(Lista_t* self) {
+void print_list_inverse(const Lista_t* self) {
   printf("[");
   for (Node_t* tmp = self->tail; tmp != NULL; tmp = tmp->prev) {
     print_nodo(tmp, " ");
@@ -267,4 +333,4 @@ void print_list_inverse(Lista_t* self) {
  * @param self
  * @return size_t
  */
-size_t get_size(Lista_t* self) { return self->size; }
+size_t get_size(const Lista_t* self) { return self->size; }
