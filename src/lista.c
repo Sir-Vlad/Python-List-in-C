@@ -25,7 +25,7 @@ Lista_t* create_list() {
  * @param value content of the node to insert
  * @param type  data type of the value
  */
-void insert_nodo(Lista_t* head, void* value, DataType type) {
+void insert_nodo(Lista_t* head, char* value, DataType type) {
     Node_t* nodo = create_nodo(value, type);
     if (head->head == NULL) {
         head->head = nodo;
@@ -126,7 +126,6 @@ int cmpNodes(const void* a, const void* b) {
  *
  * @param arr
  * @param size
- * @todo Charge the algorithm of sort
  */
 void sortArr(Node_t** arr, size_t size) {
     qsort(arr, size, sizeof(Node_t*), cmpNodes);
@@ -250,14 +249,16 @@ bool is_empty(const Lista_t* self) {
  * @param value
  * @param type
  */
-void push(Lista_t* self, void* value, DataType type) {
-    if (is_empty(self)) {
-        return;
-    }
+void push(Lista_t* self, char* value, DataType type) {
     Node_t* tmp = create_nodo(value, type);
-    self->tail->next = tmp;
-    tmp->prev = self->tail;
-    self->tail = tmp;
+    if (self->head == NULL && self->tail == NULL) {
+        self->head = tmp;
+        self->tail = tmp;
+    } else {
+        self->tail->next = tmp;
+        tmp->prev = self->tail;
+        self->tail = tmp;
+    }
     self->size++;
 }
 

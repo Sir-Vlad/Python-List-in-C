@@ -19,7 +19,7 @@ struct Nodo {
 
 // Operazioni sul nodo
 
-Node_t* create_nodo(void* value, DataType type);
+Node_t* create_nodo(char* value, DataType type);
 void print_nodo(const Node_t* nodo, char* terminator);
 
 // Operazioni tra nodi
