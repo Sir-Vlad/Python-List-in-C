@@ -10,31 +10,34 @@ Node_t* create_nodo(char* value, DataType type) {
     newNode->next = NULL;
     newNode->prev = NULL;
 
-    // TODO: controllare che le stringhe numeriche non contengono altri caratteri
-    //- es. 123 -> true, 12.3->true, 12.3p -> false, i78 -> false
     char* endptr;
     switch (type) {
-        case INT:newNode->value = (int*) malloc(sizeof(int));
+        case INT:
+            newNode->value = (int*) malloc(sizeof(int));
             *(int*) newNode->value = (int) strtol(value, &endptr, 10);
             if (value == endptr) {
                 perror("Errore di salvataggio del valore del nodo");
                 return NULL;
             }
             break;
-        case DOUBLE:newNode->value = (double*) malloc(sizeof(double));
+        case DOUBLE:
+            newNode->value = (double*) malloc(sizeof(double));
             *(double*) newNode->value = strtof(value, &endptr);
             if (value == endptr) {
                 perror("Errore di salvataggio del valore del nodo");
                 return NULL;
             }
             break;
-        case CHAR:newNode->value = (char*) malloc(sizeof(char));
+        case CHAR:
+            newNode->value = (char*) malloc(sizeof(char));
             *(char*) newNode->value = *(char*) (value);
             break;
-        case STRING:newNode->value = (char*) malloc(sizeof(char) * strlen((char*) value) + 1);
+        case STRING:
+            newNode->value = (char*) malloc(sizeof(char) * strlen((char*) value) + 1);
             memcpy(newNode->value, value, strlen((char*) value) + 1);
             break;
-        default:break;
+        default:
+            break;
     }
     return newNode;
 }
@@ -56,20 +59,30 @@ void print_nodo(const Node_t* nodo, char* terminator) {
     }
 
     switch (nodo->type) {
-        case INT:printf("%d", *(int*) nodo->value);
+        case INT:
+            printf("%d", *(int*) nodo->value);
             break;
-        case DOUBLE:printf("%g", *(double*) (nodo->value));
+        case DOUBLE:
+            printf("%g", *(double*) (nodo->value));
             break;
-        case CHAR:printf("%c", *(char*) (nodo->value));
+        case CHAR:
+            printf("%c", *(char*) (nodo->value));
             break;
-        case STRING:printf("%s", (char*) (nodo->value));
+        case STRING:
+            printf("%s", (char*) (nodo->value));
             break;
-        default:break;
+        default:
+            break;
     }
     printf("%s", terminator);
 }
 
 // --- OPERAZIONI TRA NODI ---
+
+bool isNotNumber(Node_t* node) {
+    return node->type != INT && node->type != DOUBLE;
+}
+
 
 /**
  * @brief Somma il value di due nodi
@@ -85,6 +98,11 @@ double add(Node_t* a, Node_t* b) {
         return 0.0;
     }
 
+    if (isNotNumber(a) || isNotNumber(b)) {
+        perror("La somma non può essere eseguita perché i valori non sono tipi numerici\n");
+        return 0.0;
+    }
+
     if (a->type == INT && b->type == INT) {
         sum = *(int*) a->value + *(int*) b->value;
     } else if (a->type == DOUBLE && b->type == DOUBLE) {
@@ -93,8 +111,6 @@ double add(Node_t* a, Node_t* b) {
         sum = *(double*) a->value + *(int*) b->value;
     } else if (a->type == INT && b->type == DOUBLE) {
         sum = *(int*) a->value + *(double*) b->value;
-    } else {
-        perror("Errore la somma non può essere eseguita.\n");
     }
     return sum;
 }
@@ -103,6 +119,10 @@ double minus(Node_t* a, Node_t* b) {
     double result = 0;
     if (a == NULL || b == NULL) {
         perror("Errore la sottrazione è nulla.\n");
+        return 0.0;
+    }
+    if (isNotNumber(a) || isNotNumber(b)) {
+        perror("La divisione non può essere eseguita perché i valori non sono tipi numerici\n");
         return 0.0;
     }
 
@@ -114,8 +134,6 @@ double minus(Node_t* a, Node_t* b) {
         result = *(double*) a->value - *(int*) b->value;
     } else if (a->type == INT && b->type == DOUBLE) {
         result = *(int*) a->value - *(double*) b->value;
-    } else {
-        fprintf(stderr, "Errore la sottrazione non può essere eseguita.\n");
     }
     return result;
 }
@@ -124,6 +142,10 @@ double multiply(Node_t* a, Node_t* b) {
     double result = 0;
     if (a == NULL || b == NULL) {
         perror("Errore la sottrazione è nulla.\n");
+        return 0.0;
+    }
+    if (isNotNumber(a) || isNotNumber(b)) {
+        perror("La somma non può essere eseguita perché i valori non sono tipi numerici\n");
         return 0.0;
     }
 
@@ -135,8 +157,6 @@ double multiply(Node_t* a, Node_t* b) {
         result = *(double*) a->value * *(int*) b->value;
     } else if (a->type == INT && b->type == DOUBLE) {
         result = *(int*) a->value * *(double*) b->value;
-    } else {
-        fprintf(stderr, "Errore la sottrazione non può essere eseguita.\n");
     }
     return result;
 }
@@ -145,6 +165,10 @@ double divide(Node_t* a, Node_t* b) {
     double result;
     if (a == NULL || b == NULL) {
         perror("Errore la sottrazione è nulla.\n");
+        return 0.0;
+    }
+    if (isNotNumber(a) || isNotNumber(b)) {
+        perror("La divisione non può essere eseguita perché i valori non sono tipi numerici\n");
         return 0.0;
     }
 
@@ -167,12 +191,16 @@ char* concat(Node_t* a, Node_t* b) {
     char* result = (char*) malloc(sizeof(a->value) + sizeof(b->value) + 2);
     if (a == NULL || b == NULL) {
         perror("Errore uno dei due valori sono nulli.\n");
-    } else if ((a->type == CHAR || a->type == STRING) &&
-               (b->type == CHAR || b->type == STRING)) {
-        sprintf(result, "%s %s", (char*) a->value, (char*) b->value);
-        return result;
+        return NULL;
     }
 
-    perror("Errore la concatenazione non può essere eseguita.\n");
-    return NULL;
+    if ((a->type != CHAR && a->type != STRING) || ((b->type != CHAR && b->type != STRING))) {
+        perror("Errore la concatenazione non può essere eseguita perché i valori non sono di tipo"
+               " testo"
+               ".\n");
+        return NULL;
+    }
+
+    sprintf(result, "%s %s", (char*) a->value, (char*) b->value);
+    return result;
 }

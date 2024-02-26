@@ -31,11 +31,13 @@ bool delete_node(Lista_t* self, Node_t* node);
 
 Node_t* find_value(const Lista_t* self, const void* value, DataType type);
 
-void sort_list(Lista_t* lista);
+void sort_list(Lista_t* lista, int (* cmp)(const void* a, const void* b));
 
 bool is_empty(const Lista_t* self);
 
 size_t get_size(const Lista_t* self);
+
+char* convertFieldToString(Node_t* fieldValue);
 
 void print_list(const Lista_t* self);
 

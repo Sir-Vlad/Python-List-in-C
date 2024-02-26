@@ -27,30 +27,33 @@ Lista_t* create_list() {
  */
 void insert_nodo(Lista_t* head, char* value, DataType type) {
     Node_t* nodo = create_nodo(value, type);
+    if (nodo == NULL) {
+        perror("Errore nell'inserimento del nodo");
+        return;
+    }
+
     if (head->head == NULL) {
         head->head = nodo;
         head->tail = nodo;
+        head->size++;
     } else {
-        Node_t* tmp = head->head;
-        while (tmp->next != NULL) {
-            tmp = tmp->next;
-        }
-        tmp->next = nodo;
-        nodo->prev = tmp;
-        head->tail = nodo;
+        push(head, value, type);
     }
-    head->size++;
 }
 
 /**
- * @brief Converte una lista in un array
+ * @brief Convert list to array
  *
- * @param lista
- * @return Node_t**
+ * @param lista list that will be converted
+ * @return Node_t** pointer to array
  */
 Node_t** convertListToArr(Lista_t* lista) {
     size_t size = lista->size;
     Node_t** arr = (Node_t**) malloc(size * sizeof(Node_t*));
+    if (arr == NULL) {
+        perror("Errore di allocazione");
+        return NULL;
+    }
     Node_t* tmp = lista->head;
     for (size_t i = 0; i < size; i++) {
         arr[i] = tmp;
@@ -60,39 +63,51 @@ Node_t** convertListToArr(Lista_t* lista) {
 }
 
 /**
- * @brief Converto il campo del nodo in stringa
+ * @brief Convert field value in string
  *
- * @param fieldValue
- * @param fieldType
- * @return char*
+ * @param fieldValue value of the node field
+ * @return char* field converted to string
  */
-char* convertFieldToString(Node_t* fieldValue, DataType fieldType) {
+char* convertFieldToString(Node_t* fieldValue) {
     char* a = (char*) malloc(fieldValue->type != STRING ? sizeof(fieldValue->value) + 1 :
                              sizeof(char*) * strlen(fieldValue->value) + 1);
+    if (a == NULL) {
+        perror("Errore di allocazione");
+        return NULL;
+    }
     switch (fieldValue->type) {
-        case INT: sprintf(a, "%d", *(int*) fieldValue->value);
+        case INT:
+            sprintf(a, "%d", *(int*) fieldValue->value);
             break;
-        case DOUBLE: sprintf(a, "%f", *(double*) fieldValue->value);
+        case DOUBLE:
+            sprintf(a, "%f", *(double*) fieldValue->value);
             break;
-        case CHAR: sprintf(a, "%c", *(char*) fieldValue->value);
+        case CHAR:
+            sprintf(a, "%c", *(char*) fieldValue->value);
             break;
-        case STRING: memcpy(a, fieldValue->value, strlen(fieldValue->value));
+        case STRING:
+            memcpy(a, fieldValue->value, strlen(fieldValue->value));
             break;
-        default: fprintf(stderr, "Error type not found\n");
+        default:
+            perror("Error type not found\n");
             return NULL;
     }
     return a;
 }
 
 /**
- * @brief
+ * @brief compare i due valori in input. Determina di che tipo sono e a seconda del tipo ritorna
+ * un valore.
+ * Per gli interi e i double, ritorna -1 se a < b, 0 se a = b e 1 se a > b
+ * Per le stringhe, si compare secondo l'ordine lessicografico quindi -1 se a viene prima di b, 0
+ * se sono uguali, 1 se a viene dopo a b
+ *
+ * Per i tipi numerici e le stringhe, i tipi numerici vengono sempre prima delle stringhe
+ * Per i char e le stringhe, i caratteri vengono sempre prima delle stringhe
  *
  * @param a
  * @param b
  * @return int
- * a<b => -1
- * a=b => 0
- * a>b => 1
  */
 int cmpNodes(const void* a, const void* b) {
     Node_t* nodeA = *((Node_t**) a);
@@ -110,9 +125,9 @@ int cmpNodes(const void* a, const void* b) {
         return (*(char*) nodeA->value - *(char*) nodeB->value);
     } else if ((nodeA->type == CHAR || nodeA->type == STRING) &&
                (nodeB->type == CHAR || nodeB->type == STRING)) {
-
-        return (nodeA->type == CHAR && nodeB->type == STRING) ? -1 : (nodeA->type == STRING &&
-                                                                      nodeB->type == CHAR) ? 1 : 0;
+        return (nodeA->type == CHAR && nodeB->type == STRING)
+               ? -1
+               : (nodeA->type == STRING && nodeB->type == CHAR) ? 1 : 0;
     } else {
         return ((nodeA->type == DOUBLE || nodeA->type == INT) &&
                 (nodeB->type == STRING || nodeB->type == CHAR))
@@ -127,12 +142,12 @@ int cmpNodes(const void* a, const void* b) {
  * @param arr
  * @param size
  */
-void sortArr(Node_t** arr, size_t size) {
-    qsort(arr, size, sizeof(Node_t*), cmpNodes);
+void sortArr(Node_t** arr, size_t size, int (* cmp)(const void* a, const void* b)) {
+    qsort(arr, size, sizeof(Node_t*), cmp);
 }
 
 /**
- * @brief Converte un array in una lista
+ * @brief Converte un array di nodi in una lista
  *
  * @param lista
  * @param arr
@@ -157,25 +172,29 @@ void rebuildList(Lista_t* lista, Node_t** arr) {
 }
 
 /**
- * @brief Sorts the list in lexicographic order using a custom comparison
- * function.
+ * @brief Sorts the list using a custom comparison function.
  *
- * @param self
+ * @param self list to order
+ * @param cmp function of compare
+ *
  */
-void sort_list(Lista_t* self) {
+void sort_list(Lista_t* self, int (* cmp)(const void* a, const void* b)) {
+    if (cmp == NULL) {
+        cmp = cmpNodes;
+    }
     Node_t** arr = convertListToArr(self);
-    sortArr(arr, self->size);
+    sortArr(arr, self->size, cmp);
     rebuildList(self, arr);
     free(arr);
 }
 
 /**
- * @brief
+ * @brief Remove node at the list
  *
- * @param self
- * @param node
- * @return true
- * @return false
+ * @param self list
+ * @param node node to remove
+ * @return true if the remove was successful
+ * @return false otherwise
  */
 bool delete_node(Lista_t* self, Node_t* node) {
     if (node == NULL || self->head == NULL)
@@ -225,7 +244,8 @@ Node_t* find_value(const Lista_t* self, const void* value, DataType type) {
                 if (!strcmp((char*) current->value, (char*) value))
                     return current;
                 break;
-            case UNKNOWN:return NULL;
+            case UNKNOWN:
+                return NULL;
         }
     }
     return NULL;
@@ -235,10 +255,10 @@ Node_t* find_value(const Lista_t* self, const void* value, DataType type) {
  * @brief controlla se la lista è vuota oppure no
  *
  * @param self
- * @return true
- * @return false
+ * @return true if list is empty
+ * @return false otherwise
  */
-bool is_empty(const Lista_t* self) {
+bool is_empty(const Lista_t* const self) {
     return self->head == NULL;
 }
 
@@ -251,6 +271,10 @@ bool is_empty(const Lista_t* self) {
  */
 void push(Lista_t* self, char* value, DataType type) {
     Node_t* tmp = create_nodo(value, type);
+    if (tmp == NULL) {
+        perror("Errore nella push");
+        return;
+    }
     if (self->head == NULL && self->tail == NULL) {
         self->head = tmp;
         self->tail = tmp;
