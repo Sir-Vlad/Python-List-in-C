@@ -1,6 +1,6 @@
 #include "nodo.h"
 
-Node_t* create_nodo(char* value, DataType type) {
+Node_t* create_nodo(void* value, DataType type) {
     Node_t* newNode = (Node_t*) malloc(sizeof(Node_t));
     if (newNode == NULL) {
         perror("Errore nell'allocazione del nuovo nodo");
@@ -9,35 +9,11 @@ Node_t* create_nodo(char* value, DataType type) {
     newNode->type = type;
     newNode->next = NULL;
     newNode->prev = NULL;
-
-    char* endptr;
-    switch (type) {
-        case INT:
-            newNode->value = (int*) malloc(sizeof(int));
-            *(int*) newNode->value = (int) strtol(value, &endptr, 10);
-            if (value == endptr) {
-                perror("Errore di salvataggio del valore del nodo");
-                return NULL;
-            }
-            break;
-        case DOUBLE:
-            newNode->value = (double*) malloc(sizeof(double));
-            *(double*) newNode->value = strtof(value, &endptr);
-            if (value == endptr) {
-                perror("Errore di salvataggio del valore del nodo");
-                return NULL;
-            }
-            break;
-        case CHAR:
-            newNode->value = (char*) malloc(sizeof(char));
-            *(char*) newNode->value = *(char*) (value);
-            break;
-        case STRING:
-            newNode->value = (char*) malloc(sizeof(char) * strlen((char*) value) + 1);
-            memcpy(newNode->value, value, strlen((char*) value) + 1);
-            break;
-        default:
-            break;
+    newNode->value = save_value(value, type);
+    if (newNode->value == NULL){
+        perror("Errore nella creazione del nodo\n");
+        free(newNode);
+        return NULL;
     }
     return newNode;
 }
@@ -58,22 +34,7 @@ void print_nodo(const Node_t* nodo, char* terminator) {
         return;
     }
 
-    switch (nodo->type) {
-        case INT:
-            printf("%d", *(int*) nodo->value);
-            break;
-        case DOUBLE:
-            printf("%g", *(double*) (nodo->value));
-            break;
-        case CHAR:
-            printf("%c", *(char*) (nodo->value));
-            break;
-        case STRING:
-            printf("%s", (char*) (nodo->value));
-            break;
-        default:
-            break;
-    }
+    print_value(nodo->value, nodo->type);
     printf("%s", terminator);
 }
 
@@ -82,7 +43,6 @@ void print_nodo(const Node_t* nodo, char* terminator) {
 bool isNotNumber(Node_t* node) {
     return node->type != INT && node->type != DOUBLE;
 }
-
 
 /**
  * @brief Somma il value di due nodi

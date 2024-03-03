@@ -21,9 +21,9 @@ struct lista {
 
 Lista_t* create_list();
 
-void insert_nodo(Lista_t* self, char* value, DataType type);
+void insert_nodo(Lista_t* self, void** value, DataType type);
 
-void push(Lista_t* self, char* value, DataType type);
+void push(Lista_t* self, void* value, DataType type);
 
 void pop(Lista_t* self);
 

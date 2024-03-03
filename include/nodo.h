@@ -19,15 +19,19 @@ struct Nodo {
 
 // Operazioni sul nodo
 
-Node_t* create_nodo(char* value, DataType type);
+Node_t* create_nodo(void* value, DataType type);
 void print_nodo(const Node_t* nodo, char* terminator);
 
 // Operazioni tra nodi
 
-double add(Node_t* a, Node_t* b);
-double minus(Node_t* a, Node_t* b);
-double multiply(Node_t* a, Node_t* b);
-double divide(Node_t* a, Node_t* b);
-char* concat(Node_t* a, Node_t* b);
+__attribute__((unused)) double add(Node_t* a, Node_t* b);
+
+__attribute__((unused)) double minus(Node_t* a, Node_t* b);
+
+__attribute__((unused)) double multiply(Node_t* a, Node_t* b);
+
+__attribute__((unused)) double divide(Node_t* a, Node_t* b);
+
+__attribute__((unused)) char* concat(Node_t* a, Node_t* b);
 
 #endif  // NODO_H

@@ -22,11 +22,17 @@ Lista_t* create_list() {
  * @brief Insert a new nodo in the list
  *
  * @param head  The address of the first element of the list
- * @param value content of the node to insert
+ * @param value content of the node to insert. The value is reset to NULL.
  * @param type  data type of the value
  */
-void insert_nodo(Lista_t* head, char* value, DataType type) {
-    Node_t* nodo = create_nodo(value, type);
+void insert_nodo(Lista_t* head, void** value, DataType type) {
+    if (value == NULL || *value == NULL){
+        perror("Impossibile aggiungere valore nullo\n");
+        return;
+    }
+
+    Node_t* nodo = create_nodo(*value, type);
+    *value = NULL;
     if (nodo == NULL) {
         perror("Errore nell'inserimento del nodo");
         return;
@@ -35,10 +41,12 @@ void insert_nodo(Lista_t* head, char* value, DataType type) {
     if (head->head == NULL) {
         head->head = nodo;
         head->tail = nodo;
-        head->size++;
     } else {
-        push(head, value, type);
+        head->tail->next = nodo;
+        nodo->prev = head->tail;
+        head->tail = nodo;
     }
+    head->size++;
 }
 
 /**
@@ -140,7 +148,8 @@ int cmpNodes(const void* a, const void* b) {
  * @brief Ordina un array
  *
  * @param arr
- * @param size
+ * @param size lunghezza dell'array
+ * @param cmp funzione di callback per ordinare l'array
  */
 void sortArr(Node_t** arr, size_t size, int (* cmp)(const void* a, const void* b)) {
     qsort(arr, size, sizeof(Node_t*), cmp);
@@ -175,7 +184,7 @@ void rebuildList(Lista_t* lista, Node_t** arr) {
  * @brief Sorts the list using a custom comparison function.
  *
  * @param self list to order
- * @param cmp function of compare
+ * @param cmp callback function for sorting list
  *
  */
 void sort_list(Lista_t* self, int (* cmp)(const void* a, const void* b)) {
@@ -244,6 +253,8 @@ Node_t* find_value(const Lista_t* self, const void* value, DataType type) {
                 if (!strcmp((char*) current->value, (char*) value))
                     return current;
                 break;
+            case TUPLA:
+                //todo: implementare il trova per le tuple
             case UNKNOWN:
                 return NULL;
         }
@@ -269,7 +280,7 @@ bool is_empty(const Lista_t* const self) {
  * @param value
  * @param type
  */
-void push(Lista_t* self, char* value, DataType type) {
+void push(Lista_t* self, void* value, DataType type) {
     Node_t* tmp = create_nodo(value, type);
     if (tmp == NULL) {
         perror("Errore nella push");
@@ -309,6 +320,11 @@ void pop(Lista_t* self) {
  * @param self
  */
 void print_list(const Lista_t* self) {
+    if (self->head == NULL) {
+        printf("NULL\n");
+        return;
+    }
+
     printf("[");
     for (Node_t* tmp = self->head; tmp != NULL; tmp = tmp->next) {
         print_nodo(tmp, " ");

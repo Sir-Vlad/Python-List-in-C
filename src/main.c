@@ -1,107 +1,75 @@
-#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "lista.h"
+#include "tupla.h"
 
-int main(int argc, char const* argv[]) {
-  void *input, *input2;
-  input = "5.6";
-  //   input2 = "e2.3";
+void test_list();
 
-  //   Nodo_t* head = create_nodo(input, type(input));
-  //   Nodo_t* head2 = create_nodo(input2, type(input2));
-  //   print_nodo(head);
-  //   printf("%f\n", add(head, head2));
+int main(void) {
+//    Tupla_t* tupla = create_tupla();
+//    insert_element(tupla, "7", INT);
+//    insert_element(tupla, "hello", STRING);
+//
+//    Lista_t* lista = create_list();
+//    void** value = (void **)&tupla;
+//    insert_nodo(lista, value, TYPE(tupla));
+//    insert_nodo(lista, value, TUPLA);
+//    char* str = "7";
+//    void** value2 = (void**) &str;
+//    insert_nodo(lista, value2, TYPE(7));
+//    //insert_nodo(lista, value, INT);
+//
+//    print_list(lista);
+//    print_list_type(lista);
 
-  Lista_t* lista = create_list();
-  void* elemento;
-  //   int* res = random_array(10, 0, 10);
-  int res[] = {5, 6, 3, 7, 2, 1, 4, 10, 8, 9};
-  for (size_t i = 0; i < 10; i++) {
-    elemento = (char*)malloc(sizeof(char) * 50);
-    sprintf((char*)elemento, "%i", res[i]);
-    insert_nodo(lista, elemento, type(elemento));
-    elemento = NULL;
-  }
-  insert_nodo(lista, input, type(input));
-  print_list(lista);
-
-  printf("Array ordinato:\n");
-  sort_list(lista);
-  print_list(lista);
-  // print_list_inverse(lista);
-
-  //   void* input3;
-  //   input3 = "a";
-  //   insert_nodo(lista, input3, type(input3));
-
-  //   printf("Len lista: %ld\n", get_size(lista));
-
-  //   Nodo_t* el = find_value(lista, "11", INT);
-  //   printf("Il nodo è: ");
-  //   print_nodo(el, NULL);
-  //   print_list(lista);
-
-  //   delete_node(lista, el);
-
-  //   printf("\nLista dopo eliminazione:\n");
-  //   print_list(lista);
-  //   printf("SIZE: %ld\n", get_size(lista));
-
-  //   printf("\nLista inversa:\n");
-  //   print_list_inverse(lista);
-
-  //   printf("\nPush:\n");
-  //   push(lista, "più", STRING);
-  //   print_list(lista);
-  //   print_list_inverse(lista);
-  //   printf("SIZE: %ld\n", get_size(lista));
-
-  //   printf("\nPop:\n");
-  //   pop(lista);
-  //   print_list(lista);
-  //   print_list_inverse(lista);
-  //   printf("SIZE: %ld\n", get_size(lista));
-
-  //   void *value1, *value2;
-  //   value1 = "ciao";
-  //   value2 = "hello hello";
-
-  //   Nodo_t* nodo1 = create_nodo(value1, type(value1));
-  //   Nodo_t* nodo2 = create_nodo(value2, type(value2));
-
-  //   printf("Somma: %f\n", add(nodo1, nodo2));
-  //   printf("Sottrazione: %f\n", minus(nodo1, nodo2));
-  //   printf("Moltiplicazione: %f\n", multiply(nodo1, nodo2));
-  //   printf("Divisione: %f\n", divide(nodo1, nodo2));
-
-  //   printf("\nConcatenazione: %s\n", concat(nodo1, nodo2));
-
-  return 0;
+    test_list();
+    //print_tupla(tupla, NULL);
+    return 0;
 }
 
-void test() {
-  void* input;
-  DataType data_type;
 
-  // Esempio di utilizzo della funzione
-  input = "123";
-  data_type = type(input);
-  printf("Il tipo di valore di '%s' è: %s\n", (char*)input,
-         to_string_dataType(data_type));
+__attribute__((unused)) void test_list() {
+    // Inizializza il generatore di numeri casuali
+    srand(time(NULL));
+    unsigned int dimensione = 1000000000;
+    int* array = (int*) malloc(sizeof(int) * dimensione);
+    if (array == NULL) {
+        abort();
+    }
+    // Crea un array di flag per tenere traccia dei numeri già utilizzati
+    int* flag = (int*) calloc(dimensione, sizeof(int));
+    if (flag == NULL) {
+        abort();
+    }
 
-  input = "3.14";
-  data_type = type(input);
-  printf("Il tipo di valore di '%s' è: %s\n", (char*)input,
-         to_string_dataType(data_type));
+    // Genera un numero casuale e controlla se è già presente nell'array
+    // Se non è presente, lo inserisce nell'array e setta il flag a 1
+    for (int i = 0; i < dimensione; i++) {
+        unsigned int numero;
+        do {
+            numero = rand() % dimensione;
+        } while (flag[numero]);
+        array[i] = (int) numero;
+        flag[numero] = 1;
+    }
+    free(flag);
 
-  input = "a";
-  data_type = type(input);
-  printf("Il tipo di valore di '%s' è: %s\n", (char*)input,
-         to_string_dataType(data_type));
+    Lista_t* lista = create_list();
+    printf("Creazione lista\n");
+    clock_t start = clock();
+    for (int i = 0; i < dimensione; ++i) {
+        char* el = (char*) malloc(sizeof(char));
+        sprintf(el, "%d", array[i]);
+        push(lista, el, TYPE(i));
+        free(el);
+    }
+    printf("Tempo di creazione: %lf\n", (double) (clock() - start) / CLOCKS_PER_SEC);
+    free(array);
 
-  input = "Ciao mondo!";
-  data_type = type(input);
-  printf("Il tipo di valore di '%s' è: %s\n", (char*)input,
-         to_string_dataType(data_type));
+    printf("Ordinamento\n");
+    start = clock();
+    sort_list(lista, NULL);
+    printf("Tempo di ordinamento: %lf\n", (double) (clock() - start) / CLOCKS_PER_SEC);
 }
